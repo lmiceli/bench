@@ -18,7 +18,10 @@
     </activity>
     <activity android:name=".WebDaumActivity">
 
-    </activity>>
+    </activity>
+    <activity android:name=".BenchActivity">
+
+    </activity>
 
   </application>
 
