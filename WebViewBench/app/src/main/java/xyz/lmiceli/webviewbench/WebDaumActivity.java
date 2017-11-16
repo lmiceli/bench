@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.http.SslError;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebView;
@@ -18,6 +19,17 @@ public class WebDaumActivity extends WebViewBaseActivity {
 
   protected static final String DELIMITER_STRING = "ITXSEPARATOR";
   protected static String DAUM_HTML_CODE =
+      "<div id='d'/><script src='https://spi.maps.daum.net/imap/map_js_init/postcode.v2.js'></script>"
+          + "<script>window.onload=function(){"
+          + "var e=document.getElementById('d');"
+          + "new daum.Postcode({oncomplete:function(data){ "
+          //+ "console.log(data); "
+          //+ "console.log(JSON.stringify(data)); "
+          + "ItxDaumService.processDaumAddress(data.roadAddress, data.bname, data.buildingName, data.zonecode, data.autoRoadAddress); "
+          + " },"
+          + "onresize:function(size){e.style.height=size.height+'px';},width:'100%',height:'100%'}).embed(e);}</script>";
+
+  protected static String originalDAUM_HTML_CODE =
       "<div id='d'/><script src='https://spi.maps.daum.net/imap/map_js_init/postcode.v2.js'></script>"
           + "<script>window.onload=function(){"
           + "var e=document.getElementById('d');"
@@ -59,10 +71,6 @@ public class WebDaumActivity extends WebViewBaseActivity {
         }
       }
 
-      @Override
-      public void onPageStarted(WebView view, String url, Bitmap favicon) {
-        view.loadUrl("javascript:ItxDaumService.processDaumAddress('GOATSEITXSEPARATORMIERDA');");
-      }
     };
 
     webView.setWebViewClient(client);
@@ -74,14 +82,64 @@ public class WebDaumActivity extends WebViewBaseActivity {
     }
 
     @android.webkit.JavascriptInterface
-    public void processDaumAddress(final String paramString) {
-      Log.w("DAUM ADDRESS: ", paramString);
-      //DialogUtils.createOkDialog(CoreaDaumActivity.this, paramString, true, null);
+    public void processDaumAddress(final String roadAddress, final String bname, final String buildingName, final String zonecode, final String autoRoadAddress) {
 
-      String[] addressComponents = paramString.split(DELIMITER_STRING);
-      String zipCode = addressComponents[0];
-      String addressLine1 = addressComponents[1];
-      String addressLine2 = "";
+      /**
+       * the rules are:
+       * 1) address is roadAddress or autoRoadAddress less the city part, plus "(bname, buildingName)"
+       * 2) city is address until first blank
+       * 3) zipcode is zonecode
+       * 4) province is KRNONE
+       */
+
+
+      Log.w("DAUM roadAddress: ", roadAddress);
+      Log.w("DAUM bname: ", bname);
+      Log.w("DAUM buildingName: ", buildingName);
+      Log.w("DAUM zonecode: ", zonecode);
+      Log.w("DAUM autoRoadAddress: ", autoRoadAddress);
+
+      String address = !TextUtils.isEmpty(roadAddress) ? roadAddress : autoRoadAddress;
+
+      String[] addressPart = address.split("\\s", 2);
+
+      String city = "";
+
+      if (addressPart.length == 2) {
+        city = addressPart[0];
+        address = addressPart[1];
+      }
+
+      address = address + " (" + bname + ", " + buildingName + ")";
+
+      Log.w("DAUM address: ", address);
+      Log.w("DAUM city: ", city);
+      Log.w("DAUM zone: ", zonecode);
+
+
+
+
+      /*
+        address = roadAddress + " " + (data.bname, + " " + data.buildingName); => roadAddress (desde el primer espacio en blanco hasta el final) + bname + ' ' + buildingName
+        city = data.roadAddress.substr(0,data.roadAddress.indexOf(' ')); => hasta el primer espacio en blanco de roadAddress
+        ZIPCODE = zonecode
+        PROVINCIA = KRNONE
+      */
+
+
+      //(data.roadAddress ? data.roadAddress : data.autoRoadAddress)
+
+
+
     }
+    //public void processDaumAddress(final String paramString) {
+    //  Log.w("DAUM ADDRESS: ", paramString);
+    //  //DialogUtils.createOkDialog(CoreaDaumActivity.this, paramString, true, null);
+    //
+    //  String[] addressComponents = paramString.split(DELIMITER_STRING);
+    //  String zipCode = addressComponents[0];
+    //  String addressLine1 = addressComponents[1];
+    //  String addressLine2 = "";
+    //}
   }
 }

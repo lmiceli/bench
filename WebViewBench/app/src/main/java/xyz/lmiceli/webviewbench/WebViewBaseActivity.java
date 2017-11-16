@@ -151,6 +151,7 @@ public abstract class WebViewBaseActivity extends AppCompatActivity {
     WebSettings settings = webView.getSettings();
     // Enable Javascript
     settings.setJavaScriptEnabled(true);
+    settings.setDomStorageEnabled(true);
     webView.setWebViewClient(new WebViewClient());
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
